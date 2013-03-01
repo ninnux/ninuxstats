@@ -1,3 +1,4 @@
+#!/bin/bash
 RRD_DIR="/root/ninuxstats/rrds/"
 WWW_DIR="/var/www/graphs/"
 rrdtool graph ${WWW_DIR}${1}_${2}.png --start -${2} --end now --vertical-label bits/s --width 720 --height 140 --title "${1}" DEF:graph_out_pre=${RRD_DIR}${1}.rrd:out:LAST DEF:graph_in_pre=${RRD_DIR}${1}.rrd:in:LAST \

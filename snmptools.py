@@ -16,7 +16,12 @@ def ifacelist(community,ip,snmpver):
 		#print line
 		m = re.match(r"^.*\.(\d).*=.*\"(.*)\"",line)
 		if m:
-			ifaces[m.group(2)]=m.group(1)
+			#ifaces[m.group(2)]=m.group(1)
+			#i = re.match(r"^([eth|ath|br|bgp].*)",m.group(2))
+			i = re.match(r"^((eth|ath|br|bgp).*)",m.group(2))
+			if i:
+				print i.group(1)
+				ifaces[m.group(2)]=i.group(1)
 	return ifaces
 
 def getifacecounter(community,ip,snmpver,ifindex,ver):
@@ -24,7 +29,7 @@ def getifacecounter(community,ip,snmpver,ifindex,ver):
 		oid='.1.3.6.1.2.1.2.2.1.10.'
 	else: 
 		if ver == 'out':
-			oid='.1.3.6.1.2.1.2.2.1.11.'
+			oid='.1.3.6.1.2.1.2.2.1.16.'
 	command='snmpget -c '+community+' -v'+snmpver+' '+ip+' -On '+oid+ifindex
 	lines=lancia(command)
 	for line in lines:

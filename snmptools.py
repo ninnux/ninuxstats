@@ -1,5 +1,13 @@
 import subprocess,re,os,sys,time
 
+def ping(hostname):
+	response = os.system("ping -c 1 " + hostname)
+	#and then check the response...
+	if response == 0:
+	  return True
+	else:
+	  return False
+
 def lancia(command):
 	p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 	return p.stdout.readlines()
@@ -20,7 +28,7 @@ def ifacelist(community,ip,snmpver):
 			#i = re.match(r"^([eth|ath|br|bgp].*)",m.group(2))
 			i = re.match(r"^((eth|ath|br|bgp).*)",m.group(2))
 			if i:
-				print i.group(1)
+				#print i.group(1)
 				ifaces[m.group(2)]=i.group(1)
 	return ifaces
 
@@ -40,22 +48,23 @@ def getifacecounter(community,ip,snmpver,ifindex,ver):
 
 #ip='10.162.0.14'
 ip=sys.argv[1]
-snmpver='1'
-community='public'
-datapath='rrdstest/'
-for ifacename,idx in ifacelist(community,ip,snmpver).iteritems():
-	filename=ip+'_'+ifacename+'.rrd'
-	incounter=getifacecounter(community,ip,snmpver,idx,'in')
-	outcounter=getifacecounter(community,ip,snmpver,idx,'out')
-	#print "CONTROLLO SE ESISTE"+datapath+filename	
-	if not os.path.exists(datapath+filename):
-		#print "CREO FILE\n"
-		command='rrdtool create -b 946684800 '+datapath+filename+' DS:out:COUNTER:600:U:U DS:in:COUNTER:600:U:U RRA:LAST:0.5:1:8640 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600'
-		lines=lancia(command)
-	#print "AGGIORNO "+filename+'con '+outcounter+':'+incounter
-	if incounter > 0 and outcounter > 0:
-		command='rrdtool update '+datapath+filename+' '+str(int(time.time()))+':'+outcounter+':'+incounter
-		#print command
-		lines=lancia(command)
-		#print lines
-	
+if ping(ip):
+	snmpver='1'
+	community='public'
+	datapath='rrdstest/'
+	for ifacename,idx in ifacelist(community,ip,snmpver).iteritems():
+		filename=ip+'_'+ifacename+'.rrd'
+		incounter=getifacecounter(community,ip,snmpver,idx,'in')
+		outcounter=getifacecounter(community,ip,snmpver,idx,'out')
+		#print "CONTROLLO SE ESISTE"+datapath+filename	
+		if not os.path.exists(datapath+filename):
+			#print "CREO FILE\n"
+			command='rrdtool create -b 946684800 '+datapath+filename+' DS:out:COUNTER:600:U:U DS:in:COUNTER:600:U:U RRA:LAST:0.5:1:8640 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600'
+			lines=lancia(command)
+		#print "AGGIORNO "+filename+'con '+outcounter+':'+incounter
+		if incounter > 0 or outcounter > 0:
+			command='rrdtool update '+datapath+filename+' '+str(int(time.time()))+':'+outcounter+':'+incounter
+			print command
+			lines=lancia(command)
+			#print lines
+		

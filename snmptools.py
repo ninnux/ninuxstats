@@ -48,8 +48,9 @@ for ifacename,idx in ifacelist(community,ip,snmpver).iteritems():
 		command='rrdtool create -b 946684800 '+datapath+filename+' DS:out:COUNTER:600:U:U DS:in:COUNTER:600:U:U RRA:LAST:0.5:1:8640 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600'
 		lines=lancia(command)
 	#print "AGGIORNO "+filename+'con '+outcounter+':'+incounter
-	command='rrdtool update '+datapath+filename+' '+str(int(time.time()))+':'+outcounter+':'+incounter
-	#print command
-	lines=lancia(command)
-	print lines
+	if incounter > 0 and outcounter > 0:
+		command='rrdtool update '+datapath+filename+' '+str(int(time.time()))+':'+outcounter+':'+incounter
+		#print command
+		lines=lancia(command)
+		#print lines
 	

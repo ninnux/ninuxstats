@@ -1,4 +1,4 @@
-import subprocess,re
+import subprocess,re,os,sys,time
 
 def lancia(command):
 	p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -8,7 +8,7 @@ def lancia(command):
 	#return retval
 
 
-def lista_iface(community,ip,snmpver):
+def ifacelist(community,ip,snmpver):
 	ifaces={}
 	command='snmpwalk -c '+community+' -v'+snmpver+' '+ip+' -On .1.3.6.1.2.1.2.2.1.2'
 	lines=lancia(command)
@@ -29,13 +29,27 @@ def getifacecounter(community,ip,snmpver,ifindex,ver):
 	lines=lancia(command)
 	for line in lines:
 		#print line
-		m = re.match(r"^.*\.\d.*=.*:(.*)",line)
+		m = re.match(r"^.*\.\d.*=.*:.*(\d)",line)
 		if m:
 			return m.group(1)
 
-ip='10.162.0.14'
+#ip='10.162.0.14'
+ip=sys.argv[1]
 snmpver='1'
 community='public'
-for name,idx in lista_iface(community,ip,snmpver).iteritems():
-	print name+'_in'+getifacecounter(community,ip,snmpver,idx,'in')
-	print name+'_out'+getifacecounter(community,ip,snmpver,idx,'out')
+datapath='rrdstest/'
+for ifacename,idx in ifacelist(community,ip,snmpver).iteritems():
+	filename=ip+'_'+ifacename+'.rrd'
+	incounter=getifacecounter(community,ip,snmpver,idx,'in')
+	outcounter=getifacecounter(community,ip,snmpver,idx,'out')
+	#print "CONTROLLO SE ESISTE"+datapath+filename	
+	if not os.path.exists(datapath+filename):
+		#print "CREO FILE\n"
+		command='rrdtool create -b 946684800 '+datapath+filename+' DS:out:COUNTER:600:U:U DS:in:COUNTER:600:U:U RRA:LAST:0.5:1:8640 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600'
+		lines=lancia(command)
+	#print "AGGIORNO "+filename+'con '+outcounter+':'+incounter
+	command='rrdtool update '+datapath+filename+' '+str(int(time.time()))+':'+outcounter+':'+incounter
+	#print command
+	lines=lancia(command)
+	print lines
+	

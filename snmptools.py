@@ -29,7 +29,7 @@ def ifacelist(community,ip,snmpver):
 			i = re.match(r"^((eth|ath|br|bgp).*)",m.group(2))
 			if i:
 				#print i.group(1)
-				ifaces[m.group(2)]=i.group(1)
+				ifaces[i.group(1)]=m.group(1)
 	return ifaces
 
 def getifacecounter(community,ip,snmpver,ifindex,ver):
@@ -39,6 +39,7 @@ def getifacecounter(community,ip,snmpver,ifindex,ver):
 		if ver == 'out':
 			oid='.1.3.6.1.2.1.2.2.1.16.'
 	command='snmpget -c '+community+' -v'+snmpver+' '+ip+' -On '+oid+ifindex
+	#print command
 	lines=lancia(command)
 	for line in lines:
 		#print line
@@ -47,11 +48,11 @@ def getifacecounter(community,ip,snmpver,ifindex,ver):
 			return m.group(1)
 
 #ip='10.162.0.14'
+snmpver='1'
+community='public'
+datapath='rrdstest/'
 ip=sys.argv[1]
 if ping(ip):
-	snmpver='1'
-	community='public'
-	datapath='rrdstest/'
 	for ifacename,idx in ifacelist(community,ip,snmpver).iteritems():
 		filename=ip+'_'+ifacename+'.rrd'
 		incounter=getifacecounter(community,ip,snmpver,idx,'in')
@@ -61,7 +62,7 @@ if ping(ip):
 			#print "CREO FILE\n"
 			command='rrdtool create -b 946684800 '+datapath+filename+' DS:out:COUNTER:600:U:U DS:in:COUNTER:600:U:U RRA:LAST:0.5:1:8640 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600'
 			lines=lancia(command)
-		#print "AGGIORNO "+filename+'con '+outcounter+':'+incounter
+		#print "AGGIORNO "+filename+'con '+str(outcounter)+':'+str(incounter)
 		if incounter > 0 or outcounter > 0:
 			command='rrdtool update '+datapath+filename+' '+str(int(time.time()))+':'+outcounter+':'+incounter
 			print command

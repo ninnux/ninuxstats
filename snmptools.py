@@ -22,7 +22,7 @@ def ifacelist(community,ip,snmpver):
 	lines=lancia(command)
 	for line in lines:
 		#print line
-		m = re.match(r"^.*\.(\d).*=.*\"(.*)\"",line)
+		m = re.match(r"^.*\.(\d+).*=.*\"(.*)\"",line)
 		if m:
 			#ifaces[m.group(2)]=m.group(1)
 			#i = re.match(r"^([eth|ath|br|bgp].*)",m.group(2))
@@ -39,11 +39,11 @@ def getifacecounter(community,ip,snmpver,ifindex,ver):
 		if ver == 'out':
 			oid='.1.3.6.1.2.1.2.2.1.16.'
 	command='snmpget -c '+community+' -v'+snmpver+' '+ip+' -On '+oid+ifindex
-	#print command
+	print command
 	lines=lancia(command)
 	for line in lines:
-		#print line
-		m = re.match(r"^.*\.\d.*=.*:.*(\d)",line)
+		print line
+		m = re.match(r"^.*\.\d+.*=.*:\ (\d+)",line)
 		if m:
 			return m.group(1)
 
@@ -63,7 +63,7 @@ if ping(ip):
 			command='rrdtool create -b 946684800 '+datapath+filename+' DS:out:COUNTER:600:U:U DS:in:COUNTER:600:U:U RRA:LAST:0.5:1:8640 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600'
 			lines=lancia(command)
 		#print "AGGIORNO "+filename+'con '+str(outcounter)+':'+str(incounter)
-		if incounter > 0 or outcounter > 0:
+		if (incounter > 0) or (outcounter > 0):
 			command='rrdtool update '+datapath+filename+' '+str(int(time.time()))+':'+outcounter+':'+incounter
 			print command
 			lines=lancia(command)

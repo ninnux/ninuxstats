@@ -68,4 +68,3 @@ if ping(ip):
 			print command
 			lines=lancia(command)
 			#print lines
-		
